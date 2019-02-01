@@ -1,7 +1,6 @@
 class Main{
     constructor(){
         this.canvas = document.getElementById('canvas');
-        console.log(this.canvas);
         this.input = document.getElementById('input');
         this.canvas.width = 449;
         this.canvas.height = 449;
@@ -51,6 +50,7 @@ onMouseDown(e){
 onMouseUp(){
     this.drawing = false;
     this.drawThumbnail();
+//    console.log('drawThumbnail()')
     }
 onMouseMove(e){
     if (this.drawing){
@@ -76,21 +76,58 @@ drawThumbnail(){
     var ctx = this.input.getContext('2d');
     var img = new Image();
     img.onload = () => {
+        console.log("onload");
         var inputs = [];
         var tb = document.createElement('canvas').getContext('2d');
+        //scale
         tb.drawImage(img, 0, 0, img.width, img.height, 0, 0, 28, 28);
-        var data = small.getImageData(0, 0, 28, 28).data;
-        for (var i = 0;i < 28; i++){
+        var data = tb.getImageData(0, 0, 28, 28).data;
+        for (var i=0; i<28; i++){
             for (var j = 0;j < 28; j++){
-            var n = 4 * (i * 28 + j);
-            inputs[i * 28 + j] = (data[n + 0] + data[n + 1] + data[n + 2]) / 3;
-            ctx.fillStyle = '';
+                // position for pixel
+                var n = 4*(i*28+j);
+
+                inputs[i*28+j] = (data[n+0]+data[n+1]+data[n+2])/3;
+                ctx.fillStyle = 'rgb('+[data[n+0],data[n+1],data[n+2]].join(',')+')';
+                // 140/28=5
+                ctx.fillRect(j*5,i*5,5,5);
             }
         }
-    }
+        $.ajax({
+            url: '/api/mnist',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(inputs),
+            success: (data) => {
+                console.log(data);
+//                for(let i=0;i<2;i++){
+//                    var max=0;
+//                    var max_index=0;
+//                    for(let j=0;j<10;j++){
+//                        var value=Math.round(data.results[i][j]*1000);
+//                        if (value>max){
+//                            max=value;
+//                            max_index=j;
+//                        }
+//                        var digits = String(value).length;
+//                        for(var k=0;k<3-digits;k++){
+//                            value='0'+value;
+//                        }
+//                        var text='0.'+value;
+//                        if(value>999){
+//                            text = '1.000';
+//                        }
+//                    }
+//                    console.log('max index'+max_index);
+//                }
+            }
+           });
+    };
+    img.src = this.canvas.toDataURL();
+//    console.log(img);
 }
 }
-window.onload = function(){
+window.onload = () => {
     var main = new Main();
     main.initialize();
 }

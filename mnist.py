@@ -1,7 +1,6 @@
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
-#source: https://blog.csdn.net/wangsiji_buaa/article/details/80205629#
 
 INPUT_NODE = 784
 OUTPUT_NODE = 10
@@ -16,47 +15,74 @@ TRAINING_STEPS = 30000
 MOVING_AVERAGE_DECAY = 0.99
 
 
-def inference(input_tensor, avg_class, weights1, biases1, weights2, biases2):
+def inference(input, avg_class, w1, b1, w2, b2):
     if avg_class is None:
 
-        layer1 = tf.nn.relu(tf.matmul(input_tensor, weights1) + biases1)
+        layer1 = tf.nn.relu(tf.matmul(input, w1) + b1)
 
-        return tf.matmul(layer1, weights2) + biases2
+        return tf.matmul(layer1, w2) + b2
 
     else:
-        layer1 = tf.nn.relu(tf.matmul(input_tensor, avg_class.average(weights1)) +
-                            avg_class.average(biases1))
-        return tf.matmul(layer1, avg_class.average(weights2)) + avg_class.average(biases2)
+        layer1 = tf.nn.relu(tf.matmul(input, avg_class.average(w1)) +
+                            avg_class.average(b1))
+        return tf.matmul(layer1, avg_class.average(w2)) + avg_class.average(b2)
+
+
+def predict(input, checkpoint_dir):
+    x = tf.placeholder(tf.float32, [None, INPUT_NODE],  name='x-input')
+
+    w1 = tf.Variable(tf.truncated_normal([INPUT_NODE, LAYER1_NODE], stddev=0.1))
+    b1 = tf.Variable(tf.constant(0.1, shape=[LAYER1_NODE]))
+
+    w2 = tf.Variable(tf.truncated_normal([LAYER1_NODE, OUTPUT_NODE], stddev=0.1))
+    b2 = tf.Variable(tf.constant(0.1, shape=[OUTPUT_NODE]))
+    y = inference(x, None, w1, b1, w2, b2)
+
+    init_op = tf.global_variables_initializer()
+    saver = tf.train.Saver()
+
+    with tf.Session() as sess:
+        sess.run(init_op)
+        saver.restore(sess, tf.train.latest_checkpoint(checkpoint_dir))
+
+        # prediction=tf.argmax(y,1)
+        # result=prediction.eval(feed_dict={x: input}, session=sess)
+        result = sess.run(y, feed_dict={x: input})
+        print(result)
+        return result.flatten().tolist()
 
 
 def model(dataset, checkpoint_dir):
     x = tf.placeholder(tf.float32, [None, INPUT_NODE],  name='x-input')
     y_ = tf.placeholder(tf.float32, [None, OUTPUT_NODE], name='y-input')
 
-    weights1 = tf.Variable(tf.truncated_normal([INPUT_NODE, LAYER1_NODE], stddev=0.1))
-    biases1 = tf.Variable(tf.constant(0.1, shape=[LAYER1_NODE]))
+    w1 = tf.Variable(tf.truncated_normal([INPUT_NODE, LAYER1_NODE], stddev=0.1))
+    b1 = tf.Variable(tf.constant(0.1, shape=[LAYER1_NODE]))
 
-    weights2 = tf.Variable(tf.truncated_normal([LAYER1_NODE, OUTPUT_NODE], stddev=0.1))
-    biases2 = tf.Variable(tf.constant(0.1, shape=[OUTPUT_NODE]))
+    w2 = tf.Variable(tf.truncated_normal([LAYER1_NODE, OUTPUT_NODE], stddev=0.1))
+    b2 = tf.Variable(tf.constant(0.1, shape=[OUTPUT_NODE]))
 
-    y = inference(x, None, weights1, biases1, weights2, biases2)
+    y = inference(x, None, w1, b1, w2, b2)
     global_step = tf.Variable(0, trainable=False)
 
     variable_averages = tf.train.ExponentialMovingAverage(MOVING_AVERAGE_DECAY, global_step)
     variables_averages_op = variable_averages.apply(tf.trainable_variables())
 
-    average_y = inference(x, variable_averages, weights1, biases1, weights2, biases2)
+    average_y = inference(x, variable_averages, w1, b1, w2, b2)
+
+
     cross_entropy = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=y, labels=tf.argmax(y_, 1))
     cross_entropy_mean = tf.reduce_mean(cross_entropy)
 
     regularizer = tf.contrib.layers.l2_regularizer(REGULARIZATION_RATE)
-    regularization = regularizer(weights1) + regularizer(weights2)
+    regularization = regularizer(w1) + regularizer(w2)
 
     loss = cross_entropy_mean + regularization
-    learning_rate = tf.train.exponential_decay(LEARNING_RATE_BASE, global_step, dataset.train.num_examples / BATCH_SIZE,
+
+    ln_rate = tf.train.exponential_decay(LEARNING_RATE_BASE, global_step, dataset.train.num_examples / BATCH_SIZE,
                                                LEARNING_RATE_DECAY)
 
-    train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
+    train_step = tf.train.GradientDescentOptimizer(ln_rate).minimize(loss, global_step=global_step)
 
     with tf.control_dependencies([train_step, variables_averages_op]):
         train_op = tf.no_op(name='train')
@@ -72,7 +98,7 @@ def model(dataset, checkpoint_dir):
 
         saver = tf.train.Saver()
         try:
-            # ckpt =tf.train.get_checkpoint_state(checkpoint_path)
+
             saver.restore(sess, tf.train.latest_checkpoint(checkpoint_dir))
         except Exception as e:
             print(e)
@@ -91,12 +117,15 @@ def model(dataset, checkpoint_dir):
         print("After %d training step(s), test accuracy using average model is %g" % (TRAINING_STEPS, test_acc))
 
 
-def main(argv=None):
+def main():
     import os
     base_path = os.path.dirname(os.path.realpath(__file__))
+    ckpt = base_path + '/checkpoints/'
     dataset = input_data.read_data_sets('MNIST_data', one_hot=True)
-    model(dataset, base_path + '/checkpoints/')
+    model(dataset, ckpt)
 
 
 if __name__ == '__main__':
     tf.app.run()
+
+#https://blog.csdn.net/wangsiji_buaa/article/details/80205629#
