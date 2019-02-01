@@ -29,7 +29,7 @@ def inference(input_tensor, avg_class, weights1, biases1, weights2, biases2):
         return tf.matmul(layer1, avg_class.average(weights2)) + avg_class.average(biases2)
 
 
-def model(mnist, save_path):
+def model(dataset, checkpoint_dir):
     x = tf.placeholder(tf.float32, [None, INPUT_NODE],  name='x-input')
     y_ = tf.placeholder(tf.float32, [None, OUTPUT_NODE], name='y-input')
 
@@ -53,7 +53,7 @@ def model(mnist, save_path):
     regularization = regularizer(weights1) + regularizer(weights2)
 
     loss = cross_entropy_mean + regularization
-    learning_rate = tf.train.exponential_decay(LEARNING_RATE_BASE, global_step, mnist.train.num_examples / BATCH_SIZE,
+    learning_rate = tf.train.exponential_decay(LEARNING_RATE_BASE, global_step, dataset.train.num_examples / BATCH_SIZE,
                                                LEARNING_RATE_DECAY)
 
     train_step = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss, global_step=global_step)
@@ -67,14 +67,13 @@ def model(mnist, save_path):
     # Train
     with tf.Session() as sess:
         tf.global_variables_initializer().run()
-        validate_feed = {x: mnist.validation.images,
-                         y_: mnist.validation.labels}
-        # print(tf.shape(mnist.validation.images))
-        # print(tf.shape(mnist.validation.labels))
+        validate_feed = {x: dataset.validation.images,
+                         y_: dataset.validation.labels}
+
         saver = tf.train.Saver()
         try:
-            ckpt =tf.train.get_checkpoint_state(save_path)
-            saver.restore(sess, ckpt.all_model_checkpoint_paths[0])
+            # ckpt =tf.train.get_checkpoint_state(checkpoint_path)
+            saver.restore(sess, tf.train.latest_checkpoint(checkpoint_dir))
         except Exception as e:
             print(e)
             print('No available checkpoint')
@@ -82,12 +81,12 @@ def model(mnist, save_path):
                 if i % 1000 == 0:
                     validate_acc = sess.run(accuracy, feed_dict=validate_feed)
                     print("After %d training steps, validation accuracy using average model is %g" % (i, validate_acc))
-                xs, ys = mnist.train.next_batch(BATCH_SIZE)
+                xs, ys = dataset.train.next_batch(BATCH_SIZE)
                 sess.run(train_op, feed_dict={x: xs, y_: ys})
 
-            saver.save(sess, save_path)
+            saver.save(sess, checkpoint_dir)
 
-        test_feed = {x: mnist.test.images, y_: mnist.test.labels}
+        test_feed = {x: dataset.test.images, y_: dataset.test.labels}
         test_acc = sess.run(accuracy, feed_dict=test_feed)
         print("After %d training step(s), test accuracy using average model is %g" % (TRAINING_STEPS, test_acc))
 
@@ -95,8 +94,8 @@ def model(mnist, save_path):
 def main(argv=None):
     import os
     base_path = os.path.dirname(os.path.realpath(__file__))
-    mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
-    model(mnist, base_path + '/checkpoints/')
+    dataset = input_data.read_data_sets('MNIST_data', one_hot=True)
+    model(dataset, base_path + '/checkpoints/')
 
 
 if __name__ == '__main__':
