@@ -93,6 +93,9 @@ drawThumbnail(){
                 ctx.fillRect(j*5,i*5,5,5);
             }
         }
+        if (min(...inputs) === 255){
+            break;
+        }
         $.ajax({
             url: '/api/mnist',
             method: 'POST',

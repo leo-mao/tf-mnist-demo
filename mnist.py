@@ -1,6 +1,8 @@
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 
+import sys
+# Web Page beautify
 
 INPUT_NODE = 784
 OUTPUT_NODE = 10
@@ -13,6 +15,13 @@ LEARNING_RATE_DECAY = 0.99
 REGULARIZATION_RATE = 1e-4
 TRAINING_STEPS = 30000
 MOVING_AVERAGE_DECAY = 0.99
+
+def top(l, idx):
+    if not l or len(l) < idx:
+        raise ValueError
+    sorted_l = [(i[0], i[1]) for i in sorted(enumerate(l), key=lambda x: x[1], reverse=True)]
+    print(sorted_l[:idx])
+    return sorted_l[:idx]
 
 
 def inference(input, avg_class, w1, b1, w2, b2):
@@ -47,9 +56,10 @@ def predict(input, checkpoint_dir):
 
         # prediction=tf.argmax(y,1)
         # result=prediction.eval(feed_dict={x: input}, session=sess)
-        result = sess.run(y, feed_dict={x: input})
-        print(result)
-        return result.flatten().tolist()
+        result = sess.run(y, feed_dict={x: input}).flatten().tolist()
+        result_sorted = top(result, 3)
+        # print(result_sorted)
+        return result_sorted
 
 
 def model(dataset, checkpoint_dir):
@@ -87,6 +97,7 @@ def model(dataset, checkpoint_dir):
     with tf.control_dependencies([train_step, variables_averages_op]):
         train_op = tf.no_op(name='train')
 
+    # check if correct
     correct_prediction = tf.equal(tf.argmax(average_y, 1), tf.argmax(y_, 1))
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
@@ -126,6 +137,4 @@ def main():
 
 
 if __name__ == '__main__':
-    tf.app.run()
-
-#https://blog.csdn.net/wangsiji_buaa/article/details/80205629#
+    top([7,5,1,2,3,4], 3)
