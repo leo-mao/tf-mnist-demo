@@ -1,14 +1,29 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <title>MNIST</title>
-    <!--<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">-->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}">
     <script type="text/javascript" src="{{url_for('static', filename='js/jquery-3.3.1.min.js')}}"></script>
     <script type="text/javascript" src="{{url_for('static', filename='js/app.js')}}"></script>
 </head>
 <body>
-<img src="{{url_for('static', filename='img/mnist-example.png')}}">
-<canvas id="canvas"></canvas>
-<canvas id="input" style="border:1px solid" width="140" height="140"></canvas>
+<div>
+<div class="row">
+    <div class="col-md-2">
+        <img src="{{url_for('static', filename='img/mnist-example.png')}}">
+    </div>
+    <div class="col-md-3">
+        <canvas id="canvas"></canvas>
+    </div>
+    <div class="col-md-2">
+        <canvas id="input" style="border:1px solid" width="140" height="140"></canvas>
+        <button class="" id="reset">    </button>
+    </div>
+    <div class="col-md-3" id="output">
+        <h1>Prediction</h1>
+    </div>
+</div>
+</div>
+
 </body>
 </html>

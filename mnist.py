@@ -54,11 +54,8 @@ def predict(input, checkpoint_dir):
         sess.run(init_op)
         saver.restore(sess, tf.train.latest_checkpoint(checkpoint_dir))
 
-        # prediction=tf.argmax(y,1)
-        # result=prediction.eval(feed_dict={x: input}, session=sess)
         result = sess.run(y, feed_dict={x: input}).flatten().tolist()
         result_sorted = top(result, 3)
-        # print(result_sorted)
         return result_sorted
 
 

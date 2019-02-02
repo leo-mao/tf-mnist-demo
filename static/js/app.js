@@ -2,6 +2,7 @@ class Main{
     constructor(){
         this.canvas = document.getElementById('canvas');
         this.input = document.getElementById('input');
+        this.output = document.getElementById('output');
         this.canvas.width = 449;
         this.canvas.height = 449;
         this.canvas.style.cursor = 'crosshair';
@@ -47,10 +48,10 @@ onMouseDown(e){
     this.drawing = true;
     this.prev = this.getPosition(e.clientX, e.clientY);
 }
-onMouseUp(){
+onMouseUp(e){
     this.drawing = false;
     this.drawThumbnail();
-//    console.log('drawThumbnail()')
+
     }
 onMouseMove(e){
     if (this.drawing){
@@ -76,7 +77,7 @@ drawThumbnail(){
     var ctx = this.input.getContext('2d');
     var img = new Image();
     img.onload = () => {
-        console.log("onload");
+//        console.log("onload");
         var inputs = [];
         var tb = document.createElement('canvas').getContext('2d');
         //scale
@@ -93,36 +94,30 @@ drawThumbnail(){
                 ctx.fillRect(j*5,i*5,5,5);
             }
         }
-        if (min(...inputs) === 255){
-            break;
+        if (Math.min(...inputs) === 255){
+            return;
         }
+        let output = this.output;
         $.ajax({
             url: '/api/mnist',
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(inputs),
             success: (data) => {
-                console.log(data);
-//                for(let i=0;i<2;i++){
-//                    var max=0;
-//                    var max_index=0;
-//                    for(let j=0;j<10;j++){
-//                        var value=Math.round(data.results[i][j]*1000);
-//                        if (value>max){
-//                            max=value;
-//                            max_index=j;
-//                        }
-//                        var digits = String(value).length;
-//                        for(var k=0;k<3-digits;k++){
-//                            value='0'+value;
-//                        }
-//                        var text='0.'+value;
-//                        if(value>999){
-//                            text = '1.000';
-//                        }
-//                    }
-//                    console.log('max index'+max_index);
-//                }
+                data=data.results[0];
+                this.output.innerHTML = '<h1>Prediction</h1>'
+                console.log(this.output);
+//                console.log(data);
+                for (i=0;i<data.length;i++){
+                    console.log(data[i]);
+                    var row = document.createElement('h' + (i + 1));
+                    row.innerText = data[i][0];
+//                    output.append('<h'+i+'>'+data[i][0]+'</h'+data[i][0]+'>');
+//                    console.log(data[i][0]);
+//                    console.log(row.value);
+                    output.appendChild(row);
+//                    console.log(output);
+                };
             }
            });
     };
