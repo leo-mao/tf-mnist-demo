@@ -77,7 +77,6 @@ drawThumbnail(){
     var ctx = this.input.getContext('2d');
     var img = new Image();
     img.onload = () => {
-//        console.log("onload");
         var inputs = [];
         var tb = document.createElement('canvas').getContext('2d');
         //scale
@@ -107,26 +106,23 @@ drawThumbnail(){
                 data=data.results[0];
                 this.output.innerHTML = '<h1>Prediction</h1>'
                 console.log(this.output);
-//                console.log(data);
                 for (i=0;i<data.length;i++){
                     console.log(data[i]);
                     var row = document.createElement('h' + (i + 1));
                     row.innerText = data[i][0];
-//                    output.append('<h'+i+'>'+data[i][0]+'</h'+data[i][0]+'>');
-//                    console.log(data[i][0]);
-//                    console.log(row.value);
                     output.appendChild(row);
-//                    console.log(output);
                 };
             }
            });
     };
     img.src = this.canvas.toDataURL();
-//    console.log(img);
-}
+    }
 }
 window.onload = () => {
     var main = new Main();
+    $('#reset').click(()=>{
+        main.initialize();
+    });
     main.initialize();
 }
 
