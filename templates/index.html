@@ -3,10 +3,11 @@
   <head>
     <title>MNIST</title>
     <!--<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">-->
-    <script type="text/javascript" src="{{url_for('static', filename='jquery-3.3.1.min.js')}}"></script>
-    <script type="text/javascript" src="{{url_for('static', filename='app.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='js/jquery-3.3.1.min.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='js/app.js')}}"></script>
 </head>
 <body>
+<img src="{{url_for('static', filename='img/mnist-example.png')}}">
 <canvas id="canvas"></canvas>
 <canvas id="input" style="border:1px solid" width="140" height="140"></canvas>
 </body>
