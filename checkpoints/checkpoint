@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/dl/PycharmProjects/mnist-demo/checkpoints/"
+all_model_checkpoint_paths: "/home/dl/PycharmProjects/mnist-demo/checkpoints/"
